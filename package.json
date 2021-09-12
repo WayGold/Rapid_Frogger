@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@parcel/transformer-image": "^2.0.0-rc.0",
     "parcel": "^2.0.0-rc.0"
   },
   "name": "rapid_frogger",
@@ -7,7 +8,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "directories": {
-    "lib": "lib"
+    "lib": "lib",
+    "assets": "src/assets"
   },
   "dependencies": {
     "abab": "^2.0.5",
