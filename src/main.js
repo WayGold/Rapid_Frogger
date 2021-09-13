@@ -51,13 +51,13 @@ function create ()
 
         const enemy = gameState.enemies.create(start_x, pos_y, 'frog');
         enemy.setAngle(angle);
-        enemy.speed = 3;
+        enemy.speed = 2;
         return enemy;
     }
 
     for (let lane of lanes){
         this.time.addEvent({
-            delay: Math.random() * 1600 + 800,
+            delay: Math.random() * 1600 + 1200,
             callback: createEnemy,
             callbackScope: {lane: lane},
             loop: true,
