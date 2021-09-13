@@ -1,3 +1,7 @@
+---
+permalink: /index.html
+---
+
 # Rapid_Frogger
 ## Frogger Game, Team 7  
 This game is based on HTML and Javascript using phaser.
