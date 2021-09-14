@@ -24,7 +24,7 @@ Run this command under project folder:
 ### Download Phaser
 https://phaser.io/download/stable  
 In the project folder, run:  
-`npm intall phaser`
+`npm install phaser`
 
 ## Run the Game
 Run:  
