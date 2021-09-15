@@ -32,8 +32,12 @@ function create ()
 
     gameState.player = this.add.image(config.width / 2, config.height - 25, 'frog');
     gameState.enemies = this.add.group();
+    gameState.platformsEven = this.add.group();
+    gameState.platformsOdd = this.add.group();
 
-    const lanes = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11];
+    const enemyLanes = [1, 2, 3, 4, 5];
+    const platLanesEven = [8, 10];
+    const platLanesOdd = [7, 9, 11];
     
     function createEnemy(){
         const curr_lane = this.lane;
@@ -42,11 +46,11 @@ function create ()
 
         if(curr_lane % 2 == 0){
             start_x = config.width - 50;
-            angle = 90;
+            angle = -90;
         }
         else{
             start_x = 25;
-            angle = -90;
+            angle = 90;
         }
 
         const enemy = gameState.enemies.create(start_x, pos_y, 'frog');
@@ -55,7 +59,27 @@ function create ()
         return enemy;
     }
 
-    for (let lane of lanes){
+    function createPlatformEven(){
+        const curr_lane = this.lane;
+        const pos_y = config.height - (25 + (curr_lane * 50));
+        let start_x = config.width - 50;
+
+        let platform = gameState.platformsOdd.create(start_x, pos_y, 'frog');
+        platform.speed = 2;
+        return platform;
+    }
+
+    function createPlatformOdd(){
+        const curr_lane = this.lane;
+        const pos_y = config.height - (25 + (curr_lane * 50));
+        let start_x = 25;
+
+        let platform = gameState.platformsEven.create(start_x, pos_y, 'frog');
+        platform.speed = 2;
+        return platform;
+    }
+
+    for (let lane of enemyLanes){
         this.time.addEvent({
             delay: Math.random() * 1600 + 1200,
             callback: createEnemy,
@@ -63,12 +87,32 @@ function create ()
             loop: true,
         })
     }
+
+    for (let lane of platLanesEven){
+        this.time.addEvent({
+            delay: Math.random() * 1600 + 1200,
+            callback: createPlatformEven,
+            callbackScope: {lane: lane},
+            loop: true,
+        })
+    }
+
+    for (let lane of platLanesOdd){
+        this.time.addEvent({
+            delay: Math.random() * 1600 + 1200,
+            callback: createPlatformOdd,
+            callbackScope: {lane: lane},
+            loop: true,
+        })
+    }
+
     
 }
 
 function update ()
 {   
-    removeOutOfBoundEnemy();
+    removeOutOfBoundObj();
+
     // Key Controls, left right is continuous movement, up down is stepping
     if (gameState.cursors.left.isDown && gameState.player.x > 50){
         gameState.player.x -= 2;
@@ -84,17 +128,30 @@ function update ()
     }
 
     gameState.enemies.getChildren().forEach(enemy => {
-        if(enemy.angle == 90){
+        if(enemy.angle == -90){
             enemy.x -= enemy.speed;
         }
         else{
             enemy.x += enemy.speed;
         }
 
-        let collided = checkCollision(enemy, gameState.player);
-        if(collided){
+        if(checkCollision(enemy, gameState.player)){
             console.log("Collision: " + collided + ". Enemy: " + enemy.x + ", " + 
             enemy.y + ", Player: " + gameState.player.x + ", " + gameState.player.y);
+        }
+    });
+
+    gameState.platformsEven.getChildren().forEach(platform => {
+        platform.x += platform.speed;
+        if(checkCollision(platform, gameState.player)){
+            gameState.player.x = platform.x;
+        }
+    });
+
+    gameState.platformsOdd.getChildren().forEach(platform => {
+        platform.x -= platform.speed;
+        if(checkCollision(platform, gameState.player)){
+            gameState.player.x = platform.x;
         }
     });
 }
@@ -118,10 +175,20 @@ function checkCollision(A, B){
  *  removeOutOfBoundEnemy():
  *  Return:     Remove the enemies that go out of screen
  */
-function removeOutOfBoundEnemy(){
+function removeOutOfBoundObj(){
     gameState.enemies.getChildren().forEach(enemy => {
         if(enemy.x > 825 || enemy.x < -25){
             gameState.enemies.remove(enemy);
+        }
+    });
+    gameState.platformsEven.getChildren().forEach(platform => {
+        if(platform.x > 825 || platform.x < -25){
+            gameState.platformsEven.remove(platform);
+        }
+    });
+    gameState.platformsOdd.getChildren().forEach(platform => {
+        if(platform.x > 825 || platform.x < -25){
+            gameState.platformsOdd.remove(platform);
         }
     });
 }
