@@ -1,3 +1,4 @@
+import { result } from "lodash";
 import Phaser from "phaser";
 
 const gameState = {};
@@ -19,16 +20,18 @@ var game = new Phaser.Game(config);
 function preload ()
 {
     this.load.image('frog', require("./assets/peepo.png"));
-    this.load.image('sky', require("./assets/sky.png"));
+    this.load.image('bg', require("./assets/Background.jpg"));
+    this.load.image('crab', require("./assets/crab.png"));
+    this.load.image('DriftBottle', require("./assets/DriftBottle.png"));
 }
 
 function create ()
 {
-    gameState.background = this.add.image(400, 300, 'sky');
+    gameState.background = this.add.image(400, 350, 'bg');
     gameState.cursors = this.input.keyboard.createCursorKeys();
     
-    gameState.road_1 = this.add.rectangle(config.width / 2, 225, config.width, 250, 0x7A0F96);
-    gameState.road_1 = this.add.rectangle(config.width / 2, 525, config.width, 250, 0x7A0F96);
+    gameState.road_1 = this.add.rectangle(config.width / 2, 225, config.width, 250);
+    gameState.road_1 = this.add.rectangle(config.width / 2, 525, config.width, 250);
 
     gameState.player = this.add.image(config.width / 2, config.height - 25, 'frog');
     gameState.enemies = this.add.group();
@@ -42,20 +45,19 @@ function create ()
     function createEnemy(){
         const curr_lane = this.lane;
         const pos_y = config.height - (25 + (curr_lane * 50));
-        var start_x, angle;
+        var start_x, name;
 
         if(curr_lane % 2 == 0){
-            start_x = config.width - 50;
-            angle = -90;
+            start_x = config.width - 25;
+            name = "pos";
         }
         else{
             start_x = 25;
-            angle = 90;
         }
 
-        const enemy = gameState.enemies.create(start_x, pos_y, 'frog');
-        enemy.setAngle(angle);
+        const enemy = gameState.enemies.create(start_x, pos_y, 'crab');
         enemy.speed = 2;
+        enemy.setName(name);
         return enemy;
     }
 
@@ -64,7 +66,7 @@ function create ()
         const pos_y = config.height - (25 + (curr_lane * 50));
         let start_x = config.width - 50;
 
-        let platform = gameState.platformsOdd.create(start_x, pos_y, 'frog');
+        let platform = gameState.platformsOdd.create(start_x, pos_y, 'DriftBottle');
         platform.speed = 2;
         return platform;
     }
@@ -74,7 +76,7 @@ function create ()
         const pos_y = config.height - (25 + (curr_lane * 50));
         let start_x = 25;
 
-        let platform = gameState.platformsEven.create(start_x, pos_y, 'frog');
+        let platform = gameState.platformsEven.create(start_x, pos_y, 'DriftBottle');
         platform.speed = 2;
         return platform;
     }
@@ -128,7 +130,7 @@ function update ()
     }
 
     gameState.enemies.getChildren().forEach(enemy => {
-        if(enemy.angle == -90){
+        if(enemy.name == "pos"){
             enemy.x -= enemy.speed;
         }
         else{
@@ -136,7 +138,7 @@ function update ()
         }
 
         if(checkCollision(enemy, gameState.player)){
-            console.log("Collision: " + collided + ". Enemy: " + enemy.x + ", " + 
+            console.log("Collision Detected: " + ". Enemy: " + enemy.x + ", " + 
             enemy.y + ", Player: " + gameState.player.x + ", " + gameState.player.y);
         }
     });
@@ -182,13 +184,25 @@ function removeOutOfBoundObj(){
         }
     });
     gameState.platformsEven.getChildren().forEach(platform => {
-        if(platform.x > 825 || platform.x < -25){
+        if(platform.x > 850 || platform.x < -50){
             gameState.platformsEven.remove(platform);
         }
     });
     gameState.platformsOdd.getChildren().forEach(platform => {
-        if(platform.x > 825 || platform.x < -25){
+        if(platform.x > 850 || platform.x < -50){
             gameState.platformsOdd.remove(platform);
         }
     });
+}
+
+/*
+ *  calcNormal(vec2d):
+ *  Param:      vec2d   -   input 2d vector to be normalized
+ *  Return:     The result normalized vector
+ */
+function calcNormal(vec2d){
+    result = [vec2d[0], vec2d[1]];
+    result[0] = vec2d[0] / Math.sqrt(vec2d[0] * vec2d[0] + vec2d[1] * vec2d[1]);
+    result[1] = vec2d[1] / Math.sqrt(vec2d[0] * vec2d[0] + vec2d[1] * vec2d[1]);
+    return result;
 }
