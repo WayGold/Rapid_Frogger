@@ -45,7 +45,7 @@ function create ()
             angle = 90;
         }
         else{
-            start_x = 0;
+            start_x = 25;
             angle = -90;
         }
 
@@ -68,6 +68,7 @@ function create ()
 
 function update ()
 {   
+    removeOutOfBoundEnemy();
     // Key Controls, left right is continuous movement, up down is stepping
     if (gameState.cursors.left.isDown && gameState.player.x > 50){
         gameState.player.x -= 2;
@@ -89,5 +90,38 @@ function update ()
         else{
             enemy.x += enemy.speed;
         }
-    })
+
+        let collided = checkCollision(enemy, gameState.player);
+        if(collided){
+            console.log("Collision: " + collided + ". Enemy: " + enemy.x + ", " + 
+            enemy.y + ", Player: " + gameState.player.x + ", " + gameState.player.y);
+        }
+    });
+}
+
+/*
+ *  checkCollision(A, B):
+ *  Params:     A   -   First obj to check collision
+ *              B   -   Second obj to check collision with
+ *  Return:     True for collision, False no collision
+ */
+function checkCollision(A, B){
+    let A_Left_X = A.x - 25;
+    let A_Right_X = A.x + 25;
+    let A_Top_Y = A.y - 25;
+    let A_Bottom_Y = A.y + 25;
+
+    return (A_Left_X < B.x && B.x < A_Right_X) && (A_Top_Y < B.y && B.y < A_Bottom_Y);
+}
+
+/*
+ *  removeOutOfBoundEnemy():
+ *  Return:     Remove the enemies that go out of screen
+ */
+function removeOutOfBoundEnemy(){
+    gameState.enemies.getChildren().forEach(enemy => {
+        if(enemy.x > 825 || enemy.x < -25){
+            gameState.enemies.remove(enemy);
+        }
+    });
 }
