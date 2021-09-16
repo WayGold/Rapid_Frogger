@@ -4,7 +4,7 @@ import Phaser from "phaser";
 const gameState = {};
 
 var config = {
-    type: Phaser.AUTO,
+    type: Phaser.canvas2d,
     width: 800,
     height: 700,
     scene: {
@@ -15,6 +15,9 @@ var config = {
 };
 
 var game = new Phaser.Game(config);
+
+var score = 0;
+var score_text;
 
 // This is used for pre loading assets
 function preload ()
@@ -34,9 +37,15 @@ function create ()
     gameState.road_1 = this.add.rectangle(config.width / 2, 525, config.width, 250);
 
     gameState.player = this.add.image(config.width / 2, config.height - 25, 'frog');
+    gameState.player.depth = 100;
     gameState.enemies = this.add.group();
     gameState.platformsEven = this.add.group();
     gameState.platformsOdd = this.add.group();
+
+
+
+  
+    
 
     const enemyLanes = [1, 2, 3, 4, 5];
     const platLanesEven = [8, 10];
@@ -108,22 +117,24 @@ function create ()
         })
     }
 
-    
+    score_text = this.add.text(10, 10, 'Score: ' + score,{ fontSize:"30px",color: '#00ff00' });
 }
 
 function update ()
 {   
+    
+    score_text.text = "Score: " + score;
     removeOutOfBoundObj();
-
     // Key Controls, left right is continuous movement, up down is stepping
-    if (gameState.cursors.left.isDown && gameState.player.x > 50){
-        gameState.player.x -= 2;
+    if (Phaser.Input.Keyboard.JustDown(gameState.cursors.left) && gameState.player.x > 50){
+        gameState.player.x -= 50;
     }
-    if (gameState.cursors.right.isDown && gameState.player.x < config.width - 25){
-        gameState.player.x += 2;
+    if (Phaser.Input.Keyboard.JustDown(gameState.cursors.right) && gameState.player.x < config.width - 25){
+        gameState.player.x += 50;
     }
     if (Phaser.Input.Keyboard.JustDown(gameState.cursors.up) && gameState.player.y > 25){
         gameState.player.y -= 50;
+        score += 10;
     }
     if (Phaser.Input.Keyboard.JustDown(gameState.cursors.down) && gameState.player.y < config.height - 25){
         gameState.player.y += 50;
@@ -156,7 +167,13 @@ function update ()
             gameState.player.x = platform.x;
         }
     });
+
+    
+
+
 }
+
+
 
 /*
  *  checkCollision(A, B):
@@ -206,3 +223,4 @@ function calcNormal(vec2d){
     result[1] = vec2d[1] / Math.sqrt(vec2d[0] * vec2d[0] + vec2d[1] * vec2d[1]);
     return result;
 }
+
