@@ -16,8 +16,11 @@ var config = {
 
 var game = new Phaser.Game(config);
 
+//Player's score and score text on screen
 var score = 0;
+var y_max;
 var score_text;
+
 
 // This is used for pre loading assets
 function preload ()
@@ -41,11 +44,6 @@ function create ()
     gameState.enemies = this.add.group();
     gameState.platformsEven = this.add.group();
     gameState.platformsOdd = this.add.group();
-
-
-
-  
-    
 
     const enemyLanes = [1, 2, 3, 4, 5];
     const platLanesEven = [8, 10];
@@ -117,13 +115,14 @@ function create ()
         })
     }
 
+    //initialize score text
     score_text = this.add.text(10, 10, 'Score: ' + score,{ fontSize:"30px",color: '#00ff00' });
+    y_max = gameState.player.y;
 }
 
 function update ()
 {   
-    
-    score_text.text = "Score: " + score;
+
     removeOutOfBoundObj();
     // Key Controls, left right is continuous movement, up down is stepping
     if (Phaser.Input.Keyboard.JustDown(gameState.cursors.left) && gameState.player.x > 50){
@@ -134,7 +133,12 @@ function update ()
     }
     if (Phaser.Input.Keyboard.JustDown(gameState.cursors.up) && gameState.player.y > 25){
         gameState.player.y -= 50;
-        score += 10;
+
+        //Every forward step scores 10 points
+        if(gameState.player.y<y_max){
+            y_max = gameState.player.y;
+            score += 10;
+        }
     }
     if (Phaser.Input.Keyboard.JustDown(gameState.cursors.down) && gameState.player.y < config.height - 25){
         gameState.player.y += 50;
@@ -169,7 +173,8 @@ function update ()
     });
 
     
-
+    //update score text
+    score_text.text = "Score: " + score;
 
 }
 
