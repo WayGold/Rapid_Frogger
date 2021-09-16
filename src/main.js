@@ -17,19 +17,19 @@ var config = {
 var game = new Phaser.Game(config);
 
 // This is used for pre loading assets
-function preload ()
-{
+function preload() {
     this.load.image('frog', require("./assets/peepo.png"));
     this.load.image('bg', require("./assets/Background.jpg"));
     this.load.image('crab', require("./assets/crab.png"));
     this.load.image('DriftBottle', require("./assets/DriftBottle.png"));
 }
 
-function create ()
-{
+function create() {
+    gameState.active = true;
+
     gameState.background = this.add.image(400, 350, 'bg');
     gameState.cursors = this.input.keyboard.createCursorKeys();
-    
+
     gameState.road_1 = this.add.rectangle(config.width / 2, 225, config.width, 250);
     gameState.road_1 = this.add.rectangle(config.width / 2, 525, config.width, 250);
 
@@ -41,121 +41,126 @@ function create ()
     const enemyLanes = [1, 2, 3, 4, 5];
     const platLanesEven = [8, 10];
     const platLanesOdd = [7, 9, 11];
-    
-    function createEnemy(){
+
+    function createEnemy() {
+        if(!gameState.active) return null;
         const curr_lane = this.lane;
         const pos_y = config.height - (25 + (curr_lane * 50));
         var start_x, name;
 
-        if(curr_lane % 2 == 0){
+        if (curr_lane % 2 == 0) {
             start_x = config.width - 25;
             name = "pos";
         }
-        else{
+        else {
             start_x = 25;
         }
-
         const enemy = gameState.enemies.create(start_x, pos_y, 'crab');
         enemy.speed = 2;
         enemy.setName(name);
         return enemy;
     }
 
-    function createPlatformEven(){
+    function createPlatformEven() {
+        if(!gameState.active) return null;
         const curr_lane = this.lane;
         const pos_y = config.height - (25 + (curr_lane * 50));
         let start_x = config.width - 50;
 
         let platform = gameState.platformsOdd.create(start_x, pos_y, 'DriftBottle');
-        platform.speed = 2;
+        platform.speed = 1;
         return platform;
     }
 
-    function createPlatformOdd(){
+    function createPlatformOdd() {
+        if(!gameState.active) return null;
         const curr_lane = this.lane;
         const pos_y = config.height - (25 + (curr_lane * 50));
         let start_x = 25;
 
         let platform = gameState.platformsEven.create(start_x, pos_y, 'DriftBottle');
-        platform.speed = 2;
+        platform.speed = 1;
         return platform;
     }
 
-    for (let lane of enemyLanes){
+    for (let lane of enemyLanes) {
         this.time.addEvent({
-            delay: Math.random() * 1600 + 1200,
+            delay: Math.random() * 2000 + 1500,
             callback: createEnemy,
-            callbackScope: {lane: lane},
+            callbackScope: { lane: lane },
             loop: true,
         })
     }
 
-    for (let lane of platLanesEven){
+    for (let lane of platLanesEven) {
         this.time.addEvent({
-            delay: Math.random() * 1600 + 1200,
+            delay: Math.random() * 3000 + 7000,
             callback: createPlatformEven,
-            callbackScope: {lane: lane},
+            callbackScope: { lane: lane },
             loop: true,
         })
     }
 
-    for (let lane of platLanesOdd){
+    for (let lane of platLanesOdd) {
         this.time.addEvent({
-            delay: Math.random() * 1600 + 1200,
+            delay: Math.random() * 4000 + 5000,
             callback: createPlatformOdd,
-            callbackScope: {lane: lane},
+            callbackScope: { lane: lane },
             loop: true,
         })
     }
 
-    
+
 }
 
-function update ()
-{   
+function update() {
     removeOutOfBoundObj();
 
-    // Key Controls, left right is continuous movement, up down is stepping
-    if (gameState.cursors.left.isDown && gameState.player.x > 50){
-        gameState.player.x -= 2;
-    }
-    if (gameState.cursors.right.isDown && gameState.player.x < config.width - 25){
-        gameState.player.x += 2;
-    }
-    if (Phaser.Input.Keyboard.JustDown(gameState.cursors.up) && gameState.player.y > 25){
-        gameState.player.y -= 50;
-    }
-    if (Phaser.Input.Keyboard.JustDown(gameState.cursors.down) && gameState.player.y < config.height - 25){
-        gameState.player.y += 50;
-    }
-
-    gameState.enemies.getChildren().forEach(enemy => {
-        if(enemy.name == "pos"){
-            enemy.x -= enemy.speed;
+    if (gameState.active) {
+        // Key Controls, left right is continuous movement, up down is stepping
+        if (gameState.cursors.left.isDown && gameState.player.x > 50) {
+            gameState.player.x -= 2;
         }
-        else{
-            enemy.x += enemy.speed;
+        if (gameState.cursors.right.isDown && gameState.player.x < config.width - 25) {
+            gameState.player.x += 2;
+        }
+        if (Phaser.Input.Keyboard.JustDown(gameState.cursors.up) && gameState.player.y > 25) {
+            gameState.player.y -= 50;
+        }
+        if (Phaser.Input.Keyboard.JustDown(gameState.cursors.down) && gameState.player.y < config.height - 25) {
+            gameState.player.y += 50;
         }
 
-        if(checkCollision(enemy, gameState.player)){
-            console.log("Collision Detected: " + ". Enemy: " + enemy.x + ", " + 
-            enemy.y + ", Player: " + gameState.player.x + ", " + gameState.player.y);
-        }
-    });
+        gameState.enemies.getChildren().forEach(enemy => {
+            if (enemy.name == "pos") {
+                enemy.x -= enemy.speed;
+            }
+            else {
+                enemy.x += enemy.speed;
+            }
 
-    gameState.platformsEven.getChildren().forEach(platform => {
-        platform.x += platform.speed;
-        if(checkCollision(platform, gameState.player)){
-            gameState.player.x = platform.x;
-        }
-    });
+            if (checkCollision(enemy, gameState.player)) {
+                gameState.active = false;
+                this.add.text(400, 350, 'Game Over', {fontSize: '150px'}).setOrigin(0.5);
+                console.log("Collision Detected: " + ". Enemy: " + enemy.x + ", " +
+                    enemy.y + ", Player: " + gameState.player.x + ", " + gameState.player.y);
+            }
+        });
 
-    gameState.platformsOdd.getChildren().forEach(platform => {
-        platform.x -= platform.speed;
-        if(checkCollision(platform, gameState.player)){
-            gameState.player.x = platform.x;
-        }
-    });
+        gameState.platformsEven.getChildren().forEach(platform => {
+            platform.x += platform.speed;
+            if (checkCollision(platform, gameState.player)) {
+                gameState.player.x = platform.x;
+            }
+        });
+
+        gameState.platformsOdd.getChildren().forEach(platform => {
+            platform.x -= platform.speed;
+            if (checkCollision(platform, gameState.player)) {
+                gameState.player.x = platform.x;
+            }
+        });
+    }
 }
 
 /*
@@ -164,7 +169,7 @@ function update ()
  *              B   -   Second obj to check collision with
  *  Return:     True for collision, False no collision
  */
-function checkCollision(A, B){
+function checkCollision(A, B) {
     let A_Left_X = A.x - 25;
     let A_Right_X = A.x + 25;
     let A_Top_Y = A.y - 25;
@@ -177,19 +182,19 @@ function checkCollision(A, B){
  *  removeOutOfBoundEnemy():
  *  Return:     Remove the enemies that go out of screen
  */
-function removeOutOfBoundObj(){
+function removeOutOfBoundObj() {
     gameState.enemies.getChildren().forEach(enemy => {
-        if(enemy.x > 825 || enemy.x < -25){
+        if (enemy.x > 825 || enemy.x < -25) {
             gameState.enemies.remove(enemy);
         }
     });
     gameState.platformsEven.getChildren().forEach(platform => {
-        if(platform.x > 850 || platform.x < -50){
+        if (platform.x > 850 || platform.x < -50) {
             gameState.platformsEven.remove(platform);
         }
     });
     gameState.platformsOdd.getChildren().forEach(platform => {
-        if(platform.x > 850 || platform.x < -50){
+        if (platform.x > 850 || platform.x < -50) {
             gameState.platformsOdd.remove(platform);
         }
     });
@@ -200,9 +205,10 @@ function removeOutOfBoundObj(){
  *  Param:      vec2d   -   input 2d vector to be normalized
  *  Return:     The result normalized vector
  */
-function calcNormal(vec2d){
+function calcNormal(vec2d) {
     result = [vec2d[0], vec2d[1]];
     result[0] = vec2d[0] / Math.sqrt(vec2d[0] * vec2d[0] + vec2d[1] * vec2d[1]);
     result[1] = vec2d[1] / Math.sqrt(vec2d[0] * vec2d[0] + vec2d[1] * vec2d[1]);
     return result;
 }
+
