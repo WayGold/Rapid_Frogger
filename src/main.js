@@ -21,6 +21,10 @@ var score = 0;
 var y_max;
 var score_text;
 
+//Timer
+var timer_bar;
+var timedEvent;
+
 
 // This is used for pre loading assets
 function preload ()
@@ -118,10 +122,27 @@ function create ()
     //initialize score text
     score_text = this.add.text(10, 10, 'Score: ' + score,{ fontSize:"30px",color: '#00ff00' });
     y_max = gameState.player.y;
+
+    //initialize timer bar
+    timer_bar = this.add.graphics();
+    timer_bar.fillStyle(0x00ff00, 1);
+    timer_bar.fillRect(200,650,400,50);
+    timedEvent = this.time.delayedCall(40000, this);
 }
+
+
 
 function update ()
 {   
+    timer_bar.clear();
+    timer_bar.fillStyle(0x00ff00, 1);
+    if(1-timedEvent.getProgress()>0){
+        timer_bar.fillRect(200,650,400*(1-timedEvent.getProgress()),50);
+    }else{
+        timer_bar.fillStyle(0x00ff00, 1);
+        timer_bar.fillRect(200,650,400,50);
+        timedEvent = this.time.delayedCall(40000, this);
+    }
 
     removeOutOfBoundObj();
     // Key Controls, left right is continuous movement, up down is stepping
