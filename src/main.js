@@ -170,38 +170,24 @@ function update ()
         gameState.isPlayerInOcean = false;
     }
         
-    // Key Controls, left right is continuous movement, up down is stepping
-    if (Phaser.Input.Keyboard.JustDown(gameState.cursors.left) && gameState.player.x > 50){
-        gameState.player.x -= 50;
-    }
-    if (Phaser.Input.Keyboard.JustDown(gameState.cursors.right) && gameState.player.x < config.width - 25){
-        gameState.player.x += 50;
-    }
-    if (Phaser.Input.Keyboard.JustDown(gameState.cursors.up) && gameState.player.y > 25){
-        gameState.player.y -= 50;
-
-        //Every forward step scores 10 points
-        if(gameState.player.y<y_max){
-            y_max = gameState.player.y;
-            score += 10;
-        }
-    }
-    if (Phaser.Input.Keyboard.JustDown(gameState.cursors.down) && gameState.player.y < config.height - 25){
-        gameState.player.y += 50;
-    }
-
     if (gameState.active) {
-        // Key Controls, left right is continuous movement, up down is stepping
-        if (gameState.cursors.left.isDown && gameState.player.x > 50) {
-            gameState.player.x -= 2;
+        // Key Controls, left, right, up, down are stepping by 50px
+        if (Phaser.Input.Keyboard.JustDown(gameState.cursors.left) && gameState.player.x > 50){
+            gameState.player.x -= 50;
         }
-        if (gameState.cursors.right.isDown && gameState.player.x < config.width - 25) {
-            gameState.player.x += 2;
+        if (Phaser.Input.Keyboard.JustDown(gameState.cursors.right) && gameState.player.x < config.width - 25){
+            gameState.player.x += 50;
         }
-        if (Phaser.Input.Keyboard.JustDown(gameState.cursors.up) && gameState.player.y > 25) {
+        if (Phaser.Input.Keyboard.JustDown(gameState.cursors.up) && gameState.player.y > 25){
             gameState.player.y -= 50;
+
+            //Every forward step scores 10 points
+            if(gameState.player.y < y_max){
+                y_max = gameState.player.y;
+                score += 10;
+            }
         }
-        if (Phaser.Input.Keyboard.JustDown(gameState.cursors.down) && gameState.player.y < config.height - 25) {
+        if (Phaser.Input.Keyboard.JustDown(gameState.cursors.down) && gameState.player.y < config.height - 25){
             gameState.player.y += 50;
         }
         
