@@ -26,9 +26,13 @@ function preload() {
 }
 
 function create() {
+    gameState.startTime = getTime();
+    gameState.sharkRoamTime = gameState.startTime;
+    gameState.randSharkDest = [400, 225];
     gameState.active = true;
     gameState.isPlayerDiving = false;
     gameState.isPlayerOnPlatform = false;
+    gameState.isPlayerInOcean = false;
 
     gameState.background = this.add.image(400, 350, 'bg');
     gameState.cursors = this.input.keyboard.createCursorKeys();
@@ -37,6 +41,7 @@ function create() {
     gameState.enemies = this.add.group();
     gameState.platformsEven = this.add.group();
     gameState.platformsOdd = this.add.group();
+    gameState.predatorEnemies = this.add.group();
 
     const enemyLanes = [1, 2, 3, 4, 5];
     const platLanesEven = [8, 10];
@@ -65,12 +70,13 @@ function create() {
         if(!gameState.active) return null;
         let pos_y = randBtwMinMax(125, 325);
         let start_x = randBtwMinMax(25, 785);
-        let shark = gameState.enemies.create(start_x, pos_y, 'JellyFish');
-        shark.speed = 2;
+        let shark = gameState.predatorEnemies.create(start_x, pos_y, 'JellyFish');
+        shark.speed = 0.3;
         shark.setName("Shark");
         return shark;
     }
     gameState.shark = createEnemyShark();
+
     function createPlatformEven() {
         if(!gameState.active) return null;
         const curr_lane = this.lane;
@@ -124,7 +130,14 @@ function create() {
 }
 
 function update() {
+
     removeOutOfBoundObj();
+
+    if(gameState.player.y <= 350 && gameState.player.y >= 100)
+        gameState.isPlayerInOcean = true;
+    else{
+        gameState.isPlayerInOcean = false;
+    }
 
     if (gameState.active) {
         // Key Controls, left right is continuous movement, up down is stepping
@@ -142,22 +155,7 @@ function update() {
         }
         
         // Shark AI, not on platform chase the player, on platform random roaming
-        if(!gameState.isPlayerOnPlatform){
-            console.log("Shark: Chasing player!");
-            let sharkVec2 = [gameState.shark.x, gameState.shark.y];
-            let playerVec2 = [gameState.player.x, gameState.player.y];
-            let direcVec = [playerVec2[0] - sharkVec2[0], playerVec2[1] - sharkVec2[1]];
-
-            let unitDirecVec = calcUnitVector(direcVec);
-            gameState.shark.x += Math.ceil(unitDirecVec[0] * gameState.shark.speed);
-            gameState.shark.y += Math.ceil(unitDirecVec[1] * gameState.shark.speed);
-        }
-        else{
-            console.log("Shark: Roaming!");
-            let randMove = [parseInt(randBtwMinMax(-1, 1)), parseInt(randBtwMinMax(-1, 1))];
-            gameState.shark.x += randMove[0];
-            gameState.shark.y += randMove[1];
-        }
+        sharkControl();
 
         // Beach Enemies Control
         gameState.enemies.getChildren().forEach(enemy => {
@@ -176,6 +174,8 @@ function update() {
                     enemy.y + ", Player: " + gameState.player.x + ", " + gameState.player.y);
             }
         });
+        
+        gameState.isPlayerOnPlatform = false;
 
         gameState.platformsEven.getChildren().forEach(platform => {
             platform.x += platform.speed;
@@ -183,7 +183,6 @@ function update() {
                 gameState.isPlayerOnPlatform = true;
                 gameState.player.x = platform.x;
             }
-            else{gameState.isPlayerOnPlatform = false;}
         });
 
         gameState.platformsOdd.getChildren().forEach(platform => {
@@ -192,10 +191,11 @@ function update() {
                 gameState.isPlayerOnPlatform = true;
                 gameState.player.x = platform.x;
             }
-            else{gameState.isPlayerOnPlatform = false;}
         });
     }
 }
+
+/* -- Utility Functions -- */
 
 /*
  *  checkCollision(A, B):
@@ -234,13 +234,52 @@ function removeOutOfBoundObj() {
     });
 }
 
+function sharkControl(){
+    // Shark AI, not on platform chase the player, on platform random roaming
+    if(!gameState.isPlayerOnPlatform && gameState.isPlayerInOcean){
+        console.log("Shark: Chasing player!");
+        let sharkVec2 = [gameState.shark.x, gameState.shark.y];
+        let playerVec2 = [gameState.player.x, gameState.player.y];
+        let direcVec = [playerVec2[0] - sharkVec2[0], playerVec2[1] - sharkVec2[1]];
+        let unitDirecVec = calcUnitVector(direcVec);
+
+        let delta_x = ((unitDirecVec[0] * gameState.shark.speed) > 0) ? 
+        (unitDirecVec[0] * gameState.shark.speed) : (unitDirecVec[0] * gameState.shark.speed);
+        let delta_y = ((unitDirecVec[1] * gameState.shark.speed) > 0) ? 
+        (unitDirecVec[1] * gameState.shark.speed) : (unitDirecVec[1] * gameState.shark.speed);
+
+        gameState.shark.x += delta_x;
+        gameState.shark.y += delta_y;
+    }
+    else{
+        console.log("Roaming")
+        if(getTime() - gameState.sharkRoamTime > 1500){
+            gameState.randSharkDest = [parseInt(randBtwMinMax(0, 800)), parseInt(randBtwMinMax(100, 350))];
+            console.log("2 sec passed. " + "New Destination: " + gameState.randSharkDest);
+            gameState.sharkRoamTime = getTime();
+        }
+
+        let sharkVec2 = [gameState.shark.x, gameState.shark.y];
+        let direcVec = [gameState.randSharkDest[0] - sharkVec2[0], gameState.randSharkDest[1] - sharkVec2[1]];
+        let unitDirecVec = calcUnitVector(direcVec);
+
+        let delta_x = ((unitDirecVec[0] * gameState.shark.speed) > 0) ? 
+        (unitDirecVec[0] * gameState.shark.speed) : (unitDirecVec[0] * gameState.shark.speed);
+        let delta_y = ((unitDirecVec[1] * gameState.shark.speed) > 0) ? 
+        (unitDirecVec[1] * gameState.shark.speed) : (unitDirecVec[1] * gameState.shark.speed);
+
+        gameState.shark.x += delta_x;
+        gameState.shark.y += delta_y;
+    }
+}
+
 /*
  *  calcUnitVector(vec2d):
  *  Param:      vec2d   -   input 2d vector to be normalized
  *  Return:     The result normalized vector
  */
 function calcUnitVector(vec2d) {
-    result = [vec2d[0], vec2d[1]];
+    let result = [vec2d[0], vec2d[1]];
     result[0] = vec2d[0] / Math.sqrt(vec2d[0] * vec2d[0] + vec2d[1] * vec2d[1]);
     result[1] = vec2d[1] / Math.sqrt(vec2d[0] * vec2d[0] + vec2d[1] * vec2d[1]);
     return result;
@@ -254,4 +293,10 @@ function randBtwMinMax(min, max) {
     return Math.random() * (max - min) + min;
 }
 
+function getTime(){
+    //make a new date object
+    let d = new Date();
 
+    //return the number of milliseconds since 1 January 1970 00:00:00.
+    return d.getTime();
+}
