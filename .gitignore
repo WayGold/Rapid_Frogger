@@ -352,3 +352,4 @@ MigrationBackup/
 .parcel-cache/
 
 dist/
+.vscode
