@@ -353,3 +353,4 @@ MigrationBackup/
 
 dist/
 .vscode
+.DS_Store
