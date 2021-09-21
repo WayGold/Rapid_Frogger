@@ -276,8 +276,9 @@ var Game = new Phaser.Class({
             gameState.player.depth = 100;
             gameState.player.angle = 0;
             gameState.player.x = config.width / 2;
-            gameState.player.y = config.height - HALF_OBJ_PIXEL;
+            gameState.player.y = config.height - HALF_OBJ_PIXEL * 3;
             isGameOver = false;
+            gameState.isPlayerDiving = false;
             timedEvent.reset({
                 delay: 40000,
                 callback: () => {
@@ -295,9 +296,9 @@ var Game = new Phaser.Class({
             gameState.player.depth = 100;
             gameState.player.angle = 0;
             gameState.player.x = config.width / 2;
-            gameState.player.y = config.height - HALF_OBJ_PIXEL;
+            gameState.player.y = config.height - HALF_OBJ_PIXEL * 3;
             score += 50 + Math.floor((1 - timedEvent.getProgress()) * 40) * 2;
-
+            gameState.isPlayerDiving = false;
             timedEvent.reset({
                 delay: 40000,
                 callback: () => {
