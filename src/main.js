@@ -1,10 +1,6 @@
 import { result } from "lodash";
 import Phaser from "phaser";
 
-
-
-
-
 //Player's score and score text on screen
 var score = 0;
 var y_max;
@@ -23,39 +19,43 @@ var Game = new Phaser.Class({
     Extends: Phaser.Scene,
 
     initialize:
-    function Game(){
-        Phaser.Scene.call(this, { key: 'game' });
-        window.GAME = this;
-    },
+        function Game() {
+            Phaser.Scene.call(this, { key: 'game' });
+            window.GAME = this;
+        },
 
     // This is used for pre loading assets
-    preload: function ()
-    {
+    preload: function () {
         this.load.spritesheet('playerIdle', require("./assets/PlayerIdle_spritesheet.png"), {
             frameWidth: 75,
             frameHeight: 75
         });
-    
+
         this.load.spritesheet('Dive_In', require("./assets/Dive_spritesheet.png"), {
             frameWidth: 75,
             frameHeight: 75
         });
-    
+
         this.load.spritesheet('Dive_Out', require("./assets/Dive_spritesheet.png"), {
             frameWidth: 75,
             frameHeight: 75
         });
-    
+
         this.load.spritesheet('Dive_Idle', require("./assets/DiveIdle_spritesheet.png"), {
             frameWidth: 75,
             frameHeight: 75
         });
-    
+
         this.load.spritesheet('Shark', require("./assets/shark_spritesheet.png"), {
             frameWidth: 75,
             frameHeight: 75
         });
-    
+
+        this.load.spritesheet('Eagle', require("./assets/shark_spritesheet.png"), {
+            frameWidth: 75,
+            frameHeight: 75
+        });
+
         this.load.image('bg', require("./assets/Background.jpg"));
         this.load.image('crab', require("./assets/crab.png"));
         this.load.image('DriftBottle', require("./assets/Bottle.png"));
@@ -63,11 +63,13 @@ var Game = new Phaser.Class({
     },
 
 
-    create: function (){
+    create: function () {
         gameState.startTime = getTime();
         gameState.sharkRoamTime = gameState.startTime;
         gameState.randSharkDest = [config.width / 2, (config.height / 2 - OBJ_PIXEL) / 2];
-    
+        gameState.eagleRoamTime = gameState.startTime;
+        gameState.randEagleDest = [config.width / 2, OBJ_PIXEL * 2];
+
         gameState.active = true;
         gameState.isPlayerDiving = false;
         gameState.isPlayerOnPlatform = false;
@@ -75,25 +77,26 @@ var Game = new Phaser.Class({
         gameState.isPlayerDivingAni = false;
         gameState.isPlayerOnPlatformAni = false;
         gameState.isPlayerInOceanAni = false;
-    
+
         gameState.currPlat = null;
-    
+
         gameState.background = this.add.image(config.width / 2, config.height / 2, 'bg');
         gameState.cursors = this.input.keyboard.createCursorKeys();
-    
+
         gameState.player = this.add.sprite(config.width / 2, config.height - HALF_OBJ_PIXEL, 'playerIdle');
         gameState.player.depth = 100;
-    
+        gameState.playerPreY = gameState.player.y;
+
         gameState.enemies = this.add.group();
         gameState.platformsEven = this.add.group();
         gameState.platformsOdd = this.add.group();
         gameState.predatorEnemies = this.add.group();
 
-    
+
         const enemyLanes = [1, 2, 3, 4, 5];
         const platLanesEven = [8, 10];
         const platLanesOdd = [7, 9, 11];
-    
+
         // Animation Section
         this.anims.create({
             key: 'player_idle_anim',
@@ -101,32 +104,39 @@ var Game = new Phaser.Class({
             frameRate: 10,
             repeat: -1
         });
-    
+
         this.anims.create({
             key: 'player_dive_idle_anim',
             frames: this.anims.generateFrameNumbers('Dive_Idle'),
             frameRate: 10,
             repeat: -1
         });
-    
+
         this.anims.create({
             key: 'shark_anim',
             frames: this.anims.generateFrameNumbers('Shark'),
             frameRate: 10,
             repeat: -1
         });
-    
+
+        this.anims.create({
+            key: 'eagle_anim',
+            frames: this.anims.generateFrameNumbers('Eagle'),
+            frameRate: 10,
+            repeat: -1
+        });
+
         gameState.player.play('player_idle_anim');
 
         isGameOver = false;
-    
-    
+
+
         function createEnemyBeach() {
             if (!gameState.active) return null;
             const curr_lane = this.lane;
             const pos_y = config.height - (HALF_OBJ_PIXEL + (curr_lane * OBJ_PIXEL));
             var start_x, name;
-    
+
             if (curr_lane % 2 == 0) {
                 start_x = config.width - HALF_OBJ_PIXEL;
                 name = "pos";
@@ -139,7 +149,7 @@ var Game = new Phaser.Class({
             enemy.setName(name);
             return enemy;
         }
-    
+
         function createEnemyShark() {
             if (!gameState.active) return null;
             let pos_y = randBtwMinMax(125, 325);
@@ -151,29 +161,41 @@ var Game = new Phaser.Class({
         }
         gameState.shark = createEnemyShark();
         gameState.shark.play('shark_anim');
-    
+
+        function createEnemyEagle() {
+            if (!gameState.active) return null;
+            let pos_y = randBtwMinMax(125, 325);
+            let start_x = randBtwMinMax(25, 785);
+            let eagle = gameState.predatorEnemies.create(start_x, pos_y, 'eagle');
+            eagle.speed = 0.3;
+            eagle.setName("Eagle");
+            return eagle;
+        }
+        gameState.eagle = createEnemyEagle();
+        gameState.eagle.play('eagle_anim');
+
         function createPlatformEven() {
             if (!gameState.active) return null;
             const curr_lane = this.lane;
             const pos_y = config.height - (HALF_OBJ_PIXEL + (curr_lane * OBJ_PIXEL));
             let start_x = config.width - OBJ_PIXEL;
-    
+
             let platform = gameState.platformsOdd.create(start_x, pos_y, 'DriftBottle');
             platform.speed = 1;
             return platform;
         }
-    
+
         function createPlatformOdd() {
             if (!gameState.active) return null;
             const curr_lane = this.lane;
             const pos_y = config.height - (HALF_OBJ_PIXEL + (curr_lane * OBJ_PIXEL));
             let start_x = HALF_OBJ_PIXEL;
-    
+
             let platform = gameState.platformsEven.create(start_x, pos_y, 'DriftBottle');
             platform.speed = 1;
             return platform;
         }
-    
+
         for (let lane of enemyLanes) {
             this.time.addEvent({
                 delay: Math.random() * 2000 + 1500,
@@ -182,7 +204,7 @@ var Game = new Phaser.Class({
                 loop: true,
             })
         }
-    
+
         for (let lane of platLanesEven) {
             this.time.addEvent({
                 delay: Math.random() * 3000 + 7000,
@@ -191,7 +213,7 @@ var Game = new Phaser.Class({
                 loop: true,
             })
         }
-    
+
         for (let lane of platLanesOdd) {
             this.time.addEvent({
                 delay: Math.random() * 4000 + 5000,
@@ -200,24 +222,25 @@ var Game = new Phaser.Class({
                 loop: true,
             })
         }
-    
+
         //initialize score text
         score_text = this.add.text(10, 10, 'Score: ' + score, { fontSize: "30px", color: '#00ff00' });
         y_max = gameState.player.y;
-    
+
         //initialize timer bar
         timer_bar = this.add.graphics();
         timer_bar.fillStyle(0x00ff00, 1);
         timer_bar.fillRect(config.width / 2, 0, 400, HALF_OBJ_PIXEL);
         timedEvent = this.time.addEvent({
             delay: 40000,
-            callback:() => {
+            callback: () => {
                 this.scene.pause();
                 this.scene.launch('gameover');
             },
-            callbackScope:this,
-            loop:false});
-    
+            callbackScope: this,
+            loop: false
+        });
+
 
         // Time Event To Handle Animation Switching
         this.time.addEvent({
@@ -236,18 +259,18 @@ var Game = new Phaser.Class({
         });
     },
 
-    update:function(time,delta){
+    update: function (time, delta) {
         timer_bar.clear();
         timer_bar.fillStyle(0x00ff00, 1);
-    
+
         if (1 - timedEvent.getProgress() > 0) {
             timer_bar.fillRect(config.width / 2, 0, 400 * (1 - timedEvent.getProgress()), HALF_OBJ_PIXEL);
         }
-    
+
         removeOutOfBoundObj();
 
         //Restart Function when Game Over
-        if(isGameOver){
+        if (isGameOver) {
             score = 0;
             gameState.player.depth = 100;
             gameState.player.angle = 0;
@@ -256,33 +279,35 @@ var Game = new Phaser.Class({
             isGameOver = false;
             timedEvent.reset({
                 delay: 40000,
-                callback:() => {
+                callback: () => {
                     this.scene.pause();
                     this.scene.launch('gameover');
                 },
-                callbackScope:this,
-                loop:false});
+                callbackScope: this,
+                loop: false
+            });
         }
 
         //Spawn a new player when player arrive at the endpoint.
-        if(checkAttheEnd(gameState.player)){
+        if (checkAttheEnd(gameState.player)) {
             this.add.sprite(gameState.player.x, gameState.player.y, 'playerIdle');
             gameState.player.depth = 100;
             gameState.player.angle = 0;
             gameState.player.x = config.width / 2;
             gameState.player.y = config.height - HALF_OBJ_PIXEL;
-            score += 50 + Math.floor((1-timedEvent.getProgress())*40)*2;
-            
+            score += 50 + Math.floor((1 - timedEvent.getProgress()) * 40) * 2;
+
             timedEvent.reset({
                 delay: 40000,
-                callback:() => {
+                callback: () => {
                     this.scene.pause();
                     this.scene.launch('gameover');
                 },
-                callbackScope:this,
-                loop:false});
+                callbackScope: this,
+                loop: false
+            });
         }
-    
+
         if (gameState.active && !isGameOver) {
             // Key Controls, left, right, up, down are stepping by 50px
             // LEFT
@@ -298,53 +323,98 @@ var Game = new Phaser.Class({
             // UP
             if (Phaser.Input.Keyboard.JustDown(gameState.cursors.up) && !gameState.isPlayerDiving
                 && gameState.player.y > OBJ_PIXEL * 2) {
-    
+
                 // Check First Step From Safe Zone to Ocean
-                if (gameState.player.y > (OBJ_PIXEL * 7) && (gameState.player.y - OBJ_PIXEL) < (OBJ_PIXEL * 7))
+                if (gameState.player.y > (OBJ_PIXEL * 7) && (gameState.player.y - OBJ_PIXEL) < (OBJ_PIXEL * 7)) {
                     gameState.isPlayerDiving = true;
-    
-                gameState.player.angle = 0;
-                gameState.player.y -= OBJ_PIXEL;
-    
-                //Every forward step scores 10 points
-                if (gameState.player.y < y_max) {
-                    y_max = gameState.player.y;
-                    score += 10;
+                    let tmp_player = Object.assign({}, gameState.player);
+                    tmp_player.y -= OBJ_PIXEL;
+
+                    // Platforms Manipulations
+                    gameState.platformsEven.getChildren().forEach(platform => {
+                        if (checkCollision(platform, tmp_player)) {
+                            gameState.isPlayerDiving = false;
+                        }
+                    });
+
+                    gameState.platformsOdd.getChildren().forEach(platform => {
+                        if (checkCollision(platform, tmp_player)) {
+                            gameState.isPlayerDiving = false;
+                        }
+                    });
+                }
+
+                // When Currently On A Platform
+                if (gameState.isPlayerOnPlatform) {
+                    let tmp_player = Object.assign({}, gameState.player);
+                    tmp_player.y -= OBJ_PIXEL;
+                    let break_out = true;
+
+                    // Platforms Manipulations
+                    gameState.platformsEven.getChildren().forEach(platform => {
+                        if (checkCollision(platform, tmp_player)) {
+                            break_out = false;
+                        }
+                    });
+
+                    gameState.platformsOdd.getChildren().forEach(platform => {
+                        if (checkCollision(platform, tmp_player)) {
+                            break_out = false;
+                        }
+                    });
+
+                    if (!break_out) {
+                        gameState.playerPreY = gameState.player.y
+                        gameState.player.angle = 0;
+                        gameState.player.y -= OBJ_PIXEL;
+
+                        //Every forward step scores 10 points
+                        if (gameState.player.y < y_max) {
+                            y_max = gameState.player.y;
+                            score += 10;
+                        }
+                    }
+                }
+                else {
+                    gameState.playerPreY = gameState.player.y
+                    gameState.player.angle = 0;
+                    gameState.player.y -= OBJ_PIXEL;
+
+                    //Every forward step scores 10 points
+                    if (gameState.player.y < y_max) {
+                        y_max = gameState.player.y;
+                        score += 10;
+                    }
                 }
             }
             // DOWN
             if (Phaser.Input.Keyboard.JustDown(gameState.cursors.down) && gameState.player.y < config.height - HALF_OBJ_PIXEL) {
-    
+
                 if (gameState.player.y < OBJ_PIXEL * 7 && gameState.player.y + OBJ_PIXEL > OBJ_PIXEL * 7)
                     gameState.isPlayerDiving = false;
-    
+
+                gameState.playerPreY = gameState.player.y
                 gameState.player.angle = 180;
                 gameState.player.y += OBJ_PIXEL;
             }
             // SPACE
-            if (Phaser.Input.Keyboard.JustDown(gameState.cursors.space)) {
-    
-                if (!gameState.isPlayerDiving) {
-                    // Play Diving In Animation
-                }
-                else {
-                    // Play Diving Out Animation
-                }
-    
+            if (Phaser.Input.Keyboard.JustDown(gameState.cursors.space) && gameState.isPlayerInOcean) {
                 gameState.isPlayerDiving = !gameState.isPlayerDiving;
                 console.log("Diving - " + gameState.isPlayerDiving);
             }
-    
+
             // Shark AI, not on platform chase the player, on platform random roaming
             sharkControl();
-    
+            // Eagle AI, on platform chase the player, dive random roaming
+            eagleControl();
+
             // Check Whether Player Is In Ocean
             if (gameState.player.y < OBJ_PIXEL * 7 && gameState.player.y > OBJ_PIXEL * 2)
                 gameState.isPlayerInOcean = true;
             else {
                 gameState.isPlayerInOcean = false;
             }
-    
+
             // Beach Enemies Control
             gameState.enemies.getChildren().forEach(enemy => {
                 // Check which way the enemy is coming from, enemies from right named with pos
@@ -362,25 +432,26 @@ var Game = new Phaser.Class({
                         enemy.y + ", Player: " + gameState.player.x + ", " + gameState.player.y);
                 }
             });
-    
+
             gameState.isPlayerOnPlatform = false;
-    
+
+            // Platforms Manipulations
             gameState.platformsEven.getChildren().forEach(platform => {
                 platform.x += platform.speed;
-                if (checkCollision(platform, gameState.player)) {
+                if (checkCollision(platform, gameState.player) && !gameState.isPlayerDiving) {
                     gameState.isPlayerOnPlatform = true;
                     gameState.currPlat = platform;
                 }
             });
-    
+
             gameState.platformsOdd.getChildren().forEach(platform => {
                 platform.x -= platform.speed;
-                if (checkCollision(platform, gameState.player)) {
+                if (checkCollision(platform, gameState.player) && !gameState.isPlayerDiving) {
                     gameState.isPlayerOnPlatform = true;
                     gameState.currPlat = platform;
                 }
             });
-    
+
             // This case means player jumped off a platform
             if (!gameState.isPlayerOnPlatform && gameState.currPlat != null) {
                 gameState.currPlat = null;
@@ -389,28 +460,24 @@ var Game = new Phaser.Class({
                 else
                     gameState.isPlayerDiving = false;
             }
-    
+
             if (gameState.isPlayerOnPlatform && gameState.currPlat != null) {
                 gameState.player.x = gameState.currPlat.x;
                 gameState.isPlayerDiving = false;
             }
-    
+
             // Collision Checking with Player
             if (checkCollision(gameState.shark, gameState.player) && !gameState.isPlayerOnPlatform) {
                 console.log("Shark Attack");
                 // Shark Attack Animation
-    
+
                 // Game Over
                 this.scene.pause();
                 this.scene.launch('gameover');
             }
-    
+
             //update score text
             score_text.text = "Score: " + score;
-
-
-
-    
         }
     }
 });
@@ -420,11 +487,11 @@ var GameOver = new Phaser.Class({
 
     initialize:
 
-    function GameOver(){
-         Phaser.Scene.call(this, { key: 'gameover' });
-    },
+        function GameOver() {
+            Phaser.Scene.call(this, { key: 'gameover' });
+        },
 
-    create:function () {
+    create: function () {
         gameover_text = this.add.text(config.width / 2, config.height / 2, 'Game Over', { fontSize: '150px' }).setOrigin(0.5);
         this.key = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.KeyDown = false;
@@ -432,8 +499,8 @@ var GameOver = new Phaser.Class({
         this.cursors = this.input.keyboard.createCursorKeys();
     },
 
-    update:function(time,delta){
-        if(Phaser.Input.Keyboard.JustDown(this.cursors.space)){
+    update: function (time, delta) {
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
             gameover_text.text = "";
             this.scene.resume('game');
         }
@@ -449,7 +516,7 @@ var config = {
     type: Phaser.canvas2d,
     width: 1200,
     height: 1050,
-    scene:[Game,GameOver]
+    scene: [Game, GameOver]
 };
 
 var game = new Phaser.Game(config);
@@ -514,11 +581,11 @@ function sharkControl() {
         gameState.shark.y += delta_y;
     }
     else {
-        console.log("Roaming")
+        console.log("Shark: Roaming");
         if (getTime() - gameState.sharkRoamTime > 1500) {
             gameState.randSharkDest = [parseInt(randBtwMinMax(0, config.width)),
             parseInt(randBtwMinMax(OBJ_PIXEL * 2, OBJ_PIXEL * 7))];
-            console.log("2 sec passed. " + "New Destination: " + gameState.randSharkDest);
+            console.log("Shark: 2 sec passed. " + "New Destination: " + gameState.randSharkDest);
             gameState.sharkRoamTime = getTime();
         }
 
@@ -533,6 +600,46 @@ function sharkControl() {
 
         gameState.shark.x += delta_x;
         gameState.shark.y += delta_y;
+    }
+}
+
+function eagleControl() {
+    // Shark AI, not on platform chase the player, on platform random roaming
+    if (gameState.isPlayerOnPlatform) {
+        console.log("Eagle: Chasing player!");
+        let eagleVec2 = [gameState.eagle.x, gameState.eagle.y];
+        let playerVec2 = [gameState.player.x, gameState.player.y];
+        let direcVec = [playerVec2[0] - eagleVec2[0], playerVec2[1] - eagleVec2[1]];
+        let unitDirecVec = calcUnitVector(direcVec);
+
+        let delta_x = ((unitDirecVec[0] * gameState.eagle.speed) > 0) ?
+            (unitDirecVec[0] * gameState.eagle.speed) : (unitDirecVec[0] * gameState.eagle.speed);
+        let delta_y = ((unitDirecVec[1] * gameState.eagle.speed) > 0) ?
+            (unitDirecVec[1] * gameState.eagle.speed) : (unitDirecVec[1] * gameState.eagle.speed);
+
+        gameState.eagle.x += delta_x;
+        gameState.eagle.y += delta_y;
+    }
+    else {
+        console.log("Eagle: Roaming");
+        if (getTime() - gameState.eagleRoamTime > 1500) {
+            gameState.randEagleDest = [parseInt(randBtwMinMax(0, config.width)),
+            parseInt(randBtwMinMax(OBJ_PIXEL * 2, OBJ_PIXEL * 7))];
+            console.log("Eagle: 2 sec passed. " + "New Destination: " + gameState.randEagleDest);
+            gameState.eagleRoamTime = getTime();
+        }
+
+        let eagleVec2 = [gameState.eagle.x, gameState.eagle.y];
+        let direcVec = [gameState.randEagleDest[0] - eagleVec2[0], gameState.randEagleDest[1] - eagleVec2[1]];
+        let unitDirecVec = calcUnitVector(direcVec);
+
+        let delta_x = ((unitDirecVec[0] * gameState.eagle.speed) > 0) ?
+            (unitDirecVec[0] * gameState.eagle.speed) : (unitDirecVec[0] * gameState.eagle.speed);
+        let delta_y = ((unitDirecVec[1] * gameState.eagle.speed) > 0) ?
+            (unitDirecVec[1] * gameState.eagle.speed) : (unitDirecVec[1] * gameState.eagle.speed);
+
+        gameState.eagle.x += delta_x;
+        gameState.eagle.y += delta_y;
     }
 }
 
@@ -565,6 +672,6 @@ function getTime() {
 }
 
 /*Check if player has arrive at the end*/
-function checkAttheEnd(player){
-    return (player.y > OBJ_PIXEL && player.y < OBJ_PIXEL*2);
+function checkAttheEnd(player) {
+    return (player.y > OBJ_PIXEL && player.y < OBJ_PIXEL * 2);
 }
