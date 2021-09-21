@@ -51,12 +51,12 @@ var Game = new Phaser.Class({
             frameHeight: 75
         });
 
-        this.load.spritesheet('Eagle', require("./assets/shark_spritesheet.png"), {
+        this.load.spritesheet('Eagle', require("./assets/eagle_spritesheet.png"), {
             frameWidth: 75,
             frameHeight: 75
         });
 
-        this.load.image('bg', require("./assets/Background.jpg"));
+        this.load.image('bg', require("./assets/Background.png"));
         this.load.image('crab', require("./assets/crab.png"));
         this.load.image('DriftBottle', require("./assets/Bottle.png"));
         this.load.image('JellyFish', require("./assets/JellyFish.png"))
@@ -83,7 +83,7 @@ var Game = new Phaser.Class({
         gameState.background = this.add.image(config.width / 2, config.height / 2, 'bg');
         gameState.cursors = this.input.keyboard.createCursorKeys();
 
-        gameState.player = this.add.sprite(config.width / 2, config.height - HALF_OBJ_PIXEL, 'playerIdle');
+        gameState.player = this.add.sprite(config.width / 2, config.height - HALF_OBJ_PIXEL * 3, 'playerIdle');
         gameState.player.depth = 100;
         gameState.playerPreY = gameState.player.y;
 
@@ -93,7 +93,7 @@ var Game = new Phaser.Class({
         gameState.predatorEnemies = this.add.group();
 
 
-        const enemyLanes = [1, 2, 3, 4, 5];
+        const enemyLanes = [2, 3, 4, 5];
         const platLanesEven = [8, 10];
         const platLanesOdd = [7, 9, 11];
 
@@ -172,6 +172,7 @@ var Game = new Phaser.Class({
             return eagle;
         }
         gameState.eagle = createEnemyEagle();
+        gameState.eagle.depth = 200;
         gameState.eagle.play('eagle_anim');
 
         function createPlatformEven() {
@@ -230,7 +231,7 @@ var Game = new Phaser.Class({
         //initialize timer bar
         timer_bar = this.add.graphics();
         timer_bar.fillStyle(0x00ff00, 1);
-        timer_bar.fillRect(config.width / 2, 0, 400, HALF_OBJ_PIXEL);
+        timer_bar.fillRect(config.width / 2, config.height - OBJ_PIXEL, 400, OBJ_PIXEL);
         timedEvent = this.time.addEvent({
             delay: 40000,
             callback: () => {
@@ -264,7 +265,7 @@ var Game = new Phaser.Class({
         timer_bar.fillStyle(0x00ff00, 1);
 
         if (1 - timedEvent.getProgress() > 0) {
-            timer_bar.fillRect(config.width / 2, 0, 400 * (1 - timedEvent.getProgress()), HALF_OBJ_PIXEL);
+            timer_bar.fillRect(config.width / 2, config.height - OBJ_PIXEL, 400 * (1 - timedEvent.getProgress()), OBJ_PIXEL);
         }
 
         removeOutOfBoundObj();
@@ -362,6 +363,9 @@ var Game = new Phaser.Class({
                             break_out = false;
                         }
                     });
+
+                    if(tmp_player.y < OBJ_PIXEL * 2)
+                        break_out = false;
 
                     if (!break_out) {
                         gameState.playerPreY = gameState.player.y
