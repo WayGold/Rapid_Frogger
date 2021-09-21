@@ -155,7 +155,7 @@ var Game = new Phaser.Class({
             let pos_y = randBtwMinMax(125, 325);
             let start_x = randBtwMinMax(25, 785);
             let shark = gameState.predatorEnemies.create(start_x, pos_y, 'shark');
-            shark.speed = 0.3;
+            shark.speed = 1;
             shark.setName("Shark");
             return shark;
         }
@@ -167,7 +167,7 @@ var Game = new Phaser.Class({
             let pos_y = randBtwMinMax(125, 325);
             let start_x = randBtwMinMax(25, 785);
             let eagle = gameState.predatorEnemies.create(start_x, pos_y, 'eagle');
-            eagle.speed = 0.3;
+            eagle.speed = 1;
             eagle.setName("Eagle");
             return eagle;
         }
