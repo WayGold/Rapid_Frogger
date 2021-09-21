@@ -1,7 +1,8 @@
 {
   "devDependencies": {
     "@parcel/transformer-image": "^2.0.0-rc.0",
-    "parcel": "^2.0.0-rc.0"
+    "parcel": "^2.0.0-rc.0",
+    "shx": "^0.3.2"
   },
   "name": "rapid_frogger",
   "description": "Frogger Game, Team 7",
@@ -531,8 +532,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "parcel ./index.html -p 8000",
-    "predeploy": "parcel build ./index.html",
-    "deploy": "gh-pages -d dist"
+    "prebuild-dev": "shx rm -rf dist/*",
+    "build-dev": "parcel build ./index.html --no-minify --public-url ./",
+    "prebuild": "shx rm -rf dist/*",
+    "build": "parcel build ./index.html --public-url ./",
+    "push-gh-pages": "push-dir --dir=dist --branch=gh-pages --cleanup --verbose"
   },
   "repository": {
     "type": "git",
