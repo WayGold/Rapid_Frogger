@@ -88,6 +88,7 @@ var Game = new Phaser.Class({
         gameState.platformsEven = this.add.group();
         gameState.platformsOdd = this.add.group();
         gameState.predatorEnemies = this.add.group();
+
     
         const enemyLanes = [1, 2, 3, 4, 5];
         const platLanesEven = [8, 10];
@@ -207,7 +208,7 @@ var Game = new Phaser.Class({
         //initialize timer bar
         timer_bar = this.add.graphics();
         timer_bar.fillStyle(0x00ff00, 1);
-        timer_bar.fillRect(config.width / 2, 0, 400, OBJ_PIXEL);
+        timer_bar.fillRect(config.width / 2, 0, 400, HALF_OBJ_PIXEL);
         timedEvent = this.time.addEvent({
             delay: 40000,
             callback:() => {
@@ -240,12 +241,7 @@ var Game = new Phaser.Class({
         timer_bar.fillStyle(0x00ff00, 1);
     
         if (1 - timedEvent.getProgress() > 0) {
-            timer_bar.fillRect(config.width / 2, 0, 400 * (1 - timedEvent.getProgress()), OBJ_PIXEL);
-        }
-        else {
-            timer_bar.fillStyle(0x00ff00, 1);
-            timer_bar.fillRect(config.width / 2, 0, 400, OBJ_PIXEL);
-            timedEvent = this.time.delayedCall(40000, this);
+            timer_bar.fillRect(config.width / 2, 0, 400 * (1 - timedEvent.getProgress()), HALF_OBJ_PIXEL);
         }
     
         removeOutOfBoundObj();
@@ -258,7 +254,26 @@ var Game = new Phaser.Class({
             gameState.player.x = config.width / 2;
             gameState.player.y = config.height - HALF_OBJ_PIXEL;
             isGameOver = false;
-            timedEvent = this.time.addEvent({
+            timedEvent.reset({
+                delay: 40000,
+                callback:() => {
+                    this.scene.pause();
+                    this.scene.launch('gameover');
+                },
+                callbackScope:this,
+                loop:false});
+        }
+
+        //Spawn a new player when player arrive at the endpoint.
+        if(checkAttheEnd(gameState.player)){
+            this.add.sprite(gameState.player.x, gameState.player.y, 'playerIdle');
+            gameState.player.depth = 100;
+            gameState.player.angle = 0;
+            gameState.player.x = config.width / 2;
+            gameState.player.y = config.height - HALF_OBJ_PIXEL;
+            score += 50 + Math.floor((1-timedEvent.getProgress())*40)*2;
+            
+            timedEvent.reset({
                 delay: 40000,
                 callback:() => {
                     this.scene.pause();
@@ -547,4 +562,9 @@ function getTime() {
 
     //return the number of milliseconds since 1 January 1970 00:00:00.
     return d.getTime();
+}
+
+/*Check if player has arrive at the end*/
+function checkAttheEnd(player){
+    return (player.y > OBJ_PIXEL && player.y < OBJ_PIXEL*2);
 }
