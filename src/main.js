@@ -208,8 +208,16 @@ var Game = new Phaser.Class({
         timer_bar = this.add.graphics();
         timer_bar.fillStyle(0x00ff00, 1);
         timer_bar.fillRect(config.width / 2, 0, 400, OBJ_PIXEL);
-        timedEvent = this.time.delayedCall(40000, this);
+        timedEvent = this.time.addEvent({
+            delay: 40000,
+            callback:() => {
+                this.scene.pause();
+                this.scene.launch('gameover');
+            },
+            callbackScope:this,
+            loop:false});
     
+
         // Time Event To Handle Animation Switching
         this.time.addEvent({
             delay: 0,
@@ -250,6 +258,14 @@ var Game = new Phaser.Class({
             gameState.player.x = config.width / 2;
             gameState.player.y = config.height - HALF_OBJ_PIXEL;
             isGameOver = false;
+            timedEvent = this.time.addEvent({
+                delay: 40000,
+                callback:() => {
+                    this.scene.pause();
+                    this.scene.launch('gameover');
+                },
+                callbackScope:this,
+                loop:false});
         }
     
         if (gameState.active && !isGameOver) {
