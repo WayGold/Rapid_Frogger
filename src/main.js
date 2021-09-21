@@ -481,6 +481,16 @@ var Game = new Phaser.Class({
                 this.scene.launch('gameover');
             }
 
+            // Collision Checking with Player
+            if (checkCollision(gameState.eagle, gameState.player) && gameState.isPlayerOnPlatform) {
+                console.log("Eagle Attack");
+                // Shark Attack Animation
+
+                // Game Over
+                this.scene.pause();
+                this.scene.launch('gameover');
+            }
+
             //update score text
             score_text.text = "Score: " + score;
         }
