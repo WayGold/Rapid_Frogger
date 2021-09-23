@@ -94,8 +94,12 @@ var Game = new Phaser.Class({
             frameHeight: 75
         });
 
+        this.load.spritesheet('crab', require("./assets/crabspritesheet.png"), {
+            frameWidth: 75,
+            frameHeight: 75
+        });
+
         this.load.image('bg', require("./assets/Background.png"));
-        this.load.image('crab', require("./assets/crab.png"));
         this.load.image('JellyFish', require("./assets/JellyFish.png"))
 
         //Load Sound Effect
@@ -223,6 +227,13 @@ var Game = new Phaser.Class({
             repeat: -1
         });
 
+        this.anims.create({
+            key: 'crab_run',
+            frames: this.anims.generateFrameNumbers('crab'),
+            frameRate: 10,
+            repeat: -1
+        });
+
         gameState.player.play('player_idle_anim');
 
         isGameOver = false;
@@ -244,6 +255,7 @@ var Game = new Phaser.Class({
             let enemy = gameState.enemies.create(start_x, pos_y, 'crab');
             enemy.speed = 2;
             enemy.setName(name);
+            enemy.play('crab_run');
             return enemy;
         }
 
