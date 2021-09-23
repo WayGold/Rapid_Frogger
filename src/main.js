@@ -764,7 +764,6 @@ var GameOver = new Phaser.Class({
         },
 
     preload: function() {
-        this.load.image('aaa', require("./assets/Background.png"));
         this.load.image('GameOver',require('./assets/GameOver.jpg'));
         this.load.audio('death_sound',require("url:./assets/death3.mp3"));
     },
@@ -777,6 +776,7 @@ var GameOver = new Phaser.Class({
         death_sound = this.sound.add('death_sound');
         death_sound.play();
         this.background = this.add.image(config.width / 2, config.height / 2, 'GameOver');
+        this.score_text = this.add.text(config.width / 2, config.height / 2, 'Score: ' + score, { align: "center",fontSize: "60px", color: '#FFFFFF' }).setOrigin(0.5);
     },
 
     update: function (time, delta) {
