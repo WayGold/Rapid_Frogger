@@ -151,6 +151,8 @@ var Game = new Phaser.Class({
         gameState.platformsOdd = this.add.group();
         gameState.predatorEnemies = this.add.group();
 
+        score = 0;
+
 
         const enemyLanes = [1, 2];
         const platLanesEven = [4, 6, 8, 10];
