@@ -15,6 +15,14 @@ var timedEvent;
 const HALF_OBJ_PIXEL = 37.5;
 const OBJ_PIXEL = 75;
 
+
+//Sound Effect
+var BGM;
+var player_move_sound;
+var success_sound;
+var dive_sound;
+var death_sound;
+
 var Game = new Phaser.Class({
     Extends: Phaser.Scene,
 
@@ -59,11 +67,29 @@ var Game = new Phaser.Class({
         this.load.image('bg', require("./assets/Background.png"));
         this.load.image('crab', require("./assets/crab.png"));
         this.load.image('DriftBottle', require("./assets/Bottle.png"));
-        this.load.image('JellyFish', require("./assets/JellyFish.png"))
+        this.load.image('JellyFish', require("./assets/JellyFish.png"));
+
+        //Load Sound Effect
+        this.load.audio('BGM',require("url:./assets/BGM1.mp3"));
+        this.load.audio('player_move_sound',require("url:./assets/move1.mp3"));
+
+        this.load.audio('success_sound',require("url:./assets/success3.mp3"));
+        this.load.audio('dive_sound',require("url:./assets/dive.mp3"));
+        this.load.audio('death_sound',require("url:./assets/death3.mp3"));
     },
 
 
     create: function () {
+
+        //Create Sound Effect
+        BGM = this.sound.add('BGM');
+        player_move_sound = this.sound.add('player_move_sound');
+        success_sound = this.sound.add('success_sound');
+        dive_sound = this.sound.add('dive_sound');
+        death_sound = this.sound.add('death_sound');
+
+        BGM.play({volume:0.2,loop:true});
+        
         gameState.startTime = getTime();
         gameState.sharkRoamTime = gameState.startTime;
         gameState.randSharkDest = [config.width / 2, (config.height / 2 - OBJ_PIXEL) / 2];
@@ -258,6 +284,8 @@ var Game = new Phaser.Class({
             },
             loop: true
         });
+
+
     },
 
     update: function (time, delta) {
@@ -301,6 +329,7 @@ var Game = new Phaser.Class({
             score += 50 + Math.floor((1 - timedEvent.getProgress()) * 40) * 2;
             gameState.isPlayerDiving = false;
             y_max = gameState.player.y;
+            success_sound.play();
             timedEvent.reset({
                 delay: 40000,
                 callback: () => {
@@ -318,11 +347,13 @@ var Game = new Phaser.Class({
             if (Phaser.Input.Keyboard.JustDown(gameState.cursors.left) && gameState.player.x > OBJ_PIXEL) {
                 gameState.player.angle = -90;
                 gameState.player.x -= OBJ_PIXEL;
+                player_move_sound.play();
             }
             // RIGHT
             if (Phaser.Input.Keyboard.JustDown(gameState.cursors.right) && gameState.player.x < config.width - OBJ_PIXEL) {
                 gameState.player.angle = 90;
                 gameState.player.x += OBJ_PIXEL;
+                player_move_sound.play();
             }
             // UP
             if (Phaser.Input.Keyboard.JustDown(gameState.cursors.up) && !gameState.isPlayerDiving
@@ -333,6 +364,7 @@ var Game = new Phaser.Class({
                     gameState.isPlayerDiving = true;
                     let tmp_player = Object.assign({}, gameState.player);
                     tmp_player.y -= OBJ_PIXEL;
+                
 
                     // Platforms Manipulations
                     gameState.platformsEven.getChildren().forEach(platform => {
@@ -374,6 +406,7 @@ var Game = new Phaser.Class({
                         gameState.playerPreY = gameState.player.y
                         gameState.player.angle = 0;
                         gameState.player.y -= OBJ_PIXEL;
+                        player_move_sound.play();
 
                         //Every forward step scores 10 points
                         if (gameState.player.y < y_max) {
@@ -386,6 +419,7 @@ var Game = new Phaser.Class({
                     gameState.playerPreY = gameState.player.y
                     gameState.player.angle = 0;
                     gameState.player.y -= OBJ_PIXEL;
+                    player_move_sound.play();
 
                     //Every forward step scores 10 points
                     if (gameState.player.y < y_max) {
@@ -403,11 +437,13 @@ var Game = new Phaser.Class({
                 gameState.playerPreY = gameState.player.y
                 gameState.player.angle = 180;
                 gameState.player.y += OBJ_PIXEL;
+                player_move_sound.play();
             }
             // SPACE
             if (Phaser.Input.Keyboard.JustDown(gameState.cursors.space) && gameState.isPlayerInOcean) {
                 gameState.isPlayerDiving = !gameState.isPlayerDiving;
                 console.log("Diving - " + gameState.isPlayerDiving);
+                dive_sound.play();
             }
 
             // Shark AI, not on platform chase the player, on platform random roaming
@@ -514,6 +550,10 @@ var GameOver = new Phaser.Class({
         this.KeyDown = false;
         isGameOver = true;
         this.cursors = this.input.keyboard.createCursorKeys();
+        this.load.audio('death_sound',require("url:./assets/death3.mp3"));
+        death_sound = this.sound.add('death_sound');
+        death_sound.play();
+
     },
 
     update: function (time, delta) {
