@@ -402,31 +402,31 @@ var Game = new Phaser.Class({
                         gameState.player.visible = false;
                         gameState.OnPlatDiveFlag = gameState.OnPlatDiveAni;
 
-                        gameState.prePlat.on('animationcomplete', ()=>{
+                        gameState.prePlat.on('animationcomplete', () => {
                             console.log('Animation Completed');
                             gameState.prePlat.play('bottle_idle');
                             gameState.player.visible = true;
                             gameState.OnPlatDiveAni = false;
                             gameState.OnPlatDiveFlag = false;
                         })
-                        
+
                     }
                     // Jump to platform
-                    if(gameState.OnDiveToPlatAni != gameState.OnDiveToPlatFlag){
+                    if (gameState.OnDiveToPlatAni != gameState.OnDiveToPlatFlag) {
                         console.log("Playing jump animation");
                         gameState.currPlat.play('on_dive_jump_plat');
                         gameState.player.visible = false;
                         gameState.OnDiveToPlatFlag = gameState.OnDiveToPlatAni;
 
-                        gameState.currPlat.on('animationcomplete', ()=>{
+                        gameState.currPlat.on('animationcomplete', () => {
                             console.log('Animation Completed');
-                            if(gameState.currPlat)
+                            if (gameState.currPlat)
                                 gameState.currPlat.play('on_plat_idle');
                             gameState.player.visible = false;
                             gameState.OnDiveToPlatAni = false;
                             gameState.OnDiveToPlatFlag = false;
                         })
-                        
+
                     }
                 }
             },
@@ -467,6 +467,10 @@ var Game = new Phaser.Class({
             gameState.isPlayerDiving = false;
             gameState.eagleAttackAni = false;
             gameState.sharkAttackAni = false;
+            gameState.OnPlatDiveAni = false;
+            gameState.OnPlatDiveFlag = false;
+            gameState.OnDiveToPlatAni = false;
+            gameState.OnDiveToPlatFlag = false;
             y_max = gameState.player.y;
             timedEvent.reset({
                 delay: 40000,
