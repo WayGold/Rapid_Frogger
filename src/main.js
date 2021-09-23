@@ -22,6 +22,7 @@ var success_sound;
 var dive_sound;
 var death_sound;
 
+
 var Game = new Phaser.Class({
     Extends: Phaser.Scene,
 
@@ -484,7 +485,7 @@ var Game = new Phaser.Class({
             gameState.player.depth = 100;
             gameState.player.angle = 0;
             gameState.player.x = config.width / 2;
-            gameState.player.y = config.height - HALF_OBJ_PIXEL * 3;
+            gameState.player.y = config.height - HALF_OBJ_PIXEL;
             score += 50 + Math.floor((1 - timedEvent.getProgress()) * 40) * 2;
             gameState.isPlayerDiving = false;
             y_max = gameState.player.y;
@@ -744,21 +745,27 @@ var GameOver = new Phaser.Class({
             Phaser.Scene.call(this, { key: 'gameover' });
         },
 
+    preload: function() {
+        this.load.image('aaa', require("./assets/Background.png"));
+        this.load.image('GameOver',require('./assets/GameOver.jpg'));
+        this.load.audio('death_sound',require("url:./assets/death3.mp3"));
+    },
+
     create: function () {
-        gameover_text = this.add.text(config.width / 2, config.height / 2, 'Game Over', { fontSize: '150px' }).setOrigin(0.5);
         this.key = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.KeyDown = false;
         isGameOver = true;
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.load.audio('death_sound',require("url:./assets/death3.mp3"));
         death_sound = this.sound.add('death_sound');
         death_sound.play();
+        this.background = this.add.image(config.width / 2, config.height / 2, 'GameOver');
     },
 
     update: function (time, delta) {
+        BGM.stop();
         if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
-            gameover_text.text = "";
-            this.scene.resume('game');
+            this.background.image = null;
+            this.scene.start('game');
         }
 
     }
