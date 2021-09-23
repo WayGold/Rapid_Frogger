@@ -306,7 +306,7 @@ var Game = new Phaser.Class({
 
         for (let lane of platLanesEven) {
             this.time.addEvent({
-                delay: Math.random() * 3000 + 7000,
+                delay: Math.random() * 2000 + 4000,
                 callback: createPlatformEven,
                 callbackScope: { lane: lane },
                 loop: true,
@@ -315,7 +315,7 @@ var Game = new Phaser.Class({
 
         for (let lane of platLanesOdd) {
             this.time.addEvent({
-                delay: Math.random() * 4000 + 5000,
+                delay: Math.random() * 2000 + 3000,
                 callback: createPlatformOdd,
                 callbackScope: { lane: lane },
                 loop: true,
@@ -621,6 +621,7 @@ var Game = new Phaser.Class({
 
                 // Update Animation Flag
                 if (flag) {
+                    dive_sound.play();
                     // Case for jumping up the plat
                     if (gameState.isPlayerDiving) {
                         gameState.OnDiveToPlatAni = true;
@@ -636,7 +637,7 @@ var Game = new Phaser.Class({
                     gameState.isPlayerDiving = !gameState.isPlayerDiving;
                     console.log("Diving - " + gameState.isPlayerDiving);
                 }
-                dive_sound.play();
+                
             }
 
             // Shark AI, not on platform chase the player, on platform random roaming
